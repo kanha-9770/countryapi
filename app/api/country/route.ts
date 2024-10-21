@@ -2,9 +2,8 @@
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
-  // Access the country code from the request headers (set by middleware)
   const countryCode = request.headers.get('x-country-code') || 'Unknown';
+  const ipAddress = request.headers.get('x-ip-address') || 'Unknown';
 
-  // Return the country code as a JSON response
-  return NextResponse.json({ countryCode });
+  return NextResponse.json({ country: countryCode, ip: ipAddress });
 }
