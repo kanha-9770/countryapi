@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       city: geo.city || 'Unknown city',
     });
   } catch (error) {
+    console.error('Error fetching geo data:', error);
     return NextResponse.json(
       { error: 'Something went wrong while fetching geo data' },
       { status: 500 }
