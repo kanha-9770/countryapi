@@ -1,38 +1,35 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// IP-to-country mapping
-const mockGeoDatabase: Record<string, string> = {
-  '203.0.113.42': 'US', 
-  '198.51.100.24': 'FR',
-  '103.21.244.0': 'IN',
-  '203.0.113.0': 'AU',
-  '92.40.248.0': 'GB',
-  '41.77.232.0': 'ZA',
-  '202.12.27.33': 'JP',
-  '177.124.10.1': 'BR',
-  '185.56.168.0': 'DE',
-  '37.120.140.0': 'NL',
-  '46.101.0.1': 'SG',
-  '109.69.8.0': 'IT',
-};
-
-function getCountryFromIP(ip: string): string {
-  return mockGeoDatabase[ip] || 'Unknown';
+// TypeScript types
+interface Geo {
+  country?: string;
+  region?: string;
+  city?: string;
 }
 
-export function middleware(request: NextRequest) {
-  // Access the geo.country property provided by Vercel (or return 'Unknown' if not available)
-  const country = request.geo?.country || 'Unknown';
-  
-  // Create a response and attach the country code to the headers
-  const response = NextResponse.next();
-  response.headers.set('x-country-code', country);
+export async function GET(request: NextRequest) {
+  try {
+    // Extract geo data from the request (provided by Vercel)
+    const geo: Geo = request.geo || {};
 
-  return response;
+    // If no geo data is available, return an error response
+    if (!geo || !geo.country) {
+      return NextResponse.json(
+        { error: 'Could not retrieve geo-location information' },
+        { status: 400 }
+      );
+    }
+
+    // Return the geo-country data back to the client
+    return NextResponse.json({
+      country: geo.country,
+      region: geo.region || 'Unknown region',
+      city: geo.city || 'Unknown city',
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Something went wrong while fetching geo data' },
+      { status: 500 }
+    );
+  }
 }
-
-// Ensure the middleware runs on all API routes
-export const config = {
-  matcher: '/api/country/req',
-};
