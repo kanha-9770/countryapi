@@ -1,10 +1,35 @@
-// app/api/country/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
-  // Access the country code from the request headers (set by middleware)
-  const countryCode = request.headers.get('x-country-code') || 'Unknown';
+// TypeScript types
+interface Geo {
+  country?: string;
+  region?: string;
+  city?: string;
+}
 
-  // Return the country code as a JSON response
-  return NextResponse.json({ countryCode });
+export async function GET(request: NextRequest) {
+  try {
+    // Extract geo data from the request (provided by Vercel)
+    const geo: Geo = request.geo || {};
+
+    // If no geo data is available, return an error response
+    if (!geo || !geo.country) {
+      return NextResponse.json(
+        { error: 'Could not retrieve geo-location information' },
+        { status: 400 }
+      );
+    }
+
+    // Return the geo-country data back to the client
+    return NextResponse.json({
+      country: geo.country,
+      region: geo.region || 'Unknown region',
+      city: geo.city || 'Unknown city',
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Something went wrong while fetching geo data' },
+      { status: 500 }
+    );
+  }
 }

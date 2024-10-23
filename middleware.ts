@@ -1,19 +1,22 @@
-// middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Access the geo.country property provided by Vercel (or return 'Unknown' if not available)
-  const country = request.geo?.country || 'Unknown';
-  
-  // Create a response and attach the country code to the headers
-  const response = NextResponse.next();
-  response.headers.set('x-country-code', country);
+  // If there's no geo object, return an error message
+  const { geo } = request;
 
-  return response;
+  if (!geo || !geo.country) {
+    return NextResponse.json(
+      { error: 'Geo-location data not available from Vercel' },
+      { status: 400 }
+    );
+  }
+
+  // Pass the request along with geo-location data
+  return NextResponse.next();
 }
 
-// Ensure the middleware runs on all API routes
+// Apply middleware to specific API paths if needed
 export const config = {
-  matcher: '/api/:path*',
+  matcher: '/api/country/req',
 };
